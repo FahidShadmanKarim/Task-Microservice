@@ -15,7 +15,7 @@ services:
 
 
   fastapi:
-    build: .
+    build: ./user-service
     ports:
       - "8008:8000"
     depends_on:
@@ -27,6 +27,8 @@ services:
       ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES}
     networks:
       - app-network
+    env_file:
+      - .env
 
 
 volumes:

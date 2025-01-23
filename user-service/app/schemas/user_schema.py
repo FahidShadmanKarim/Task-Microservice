@@ -9,8 +9,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str = Field(..., min_length=8) 
-    role : str = "Team Member"
-
+   
     @validator('password')
     def validate_password(cls,v):
         if not re.search(r"[0-9]",v):
@@ -22,8 +21,7 @@ class UserCreate(UserBase):
 class UserUpdate(BaseModel):
     username: Optional[str] = None
     email: Optional[str] = None
-    role: Optional[str] = None
-
+  
     class Config:
         from_attributes = True
 

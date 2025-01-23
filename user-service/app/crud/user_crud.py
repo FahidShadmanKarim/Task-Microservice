@@ -35,7 +35,6 @@ def get_user_by_id(db: Session, user_id: int) -> Optional[UserResponse]:
     return UserResponse.from_orm(user) if user else None
 
 def get_users(db: Session) -> Page[UserResponse]:
-
     query = db.query(User)
     users = paginate(query)
     return users
