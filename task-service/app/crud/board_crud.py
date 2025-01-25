@@ -12,14 +12,16 @@ from fastapi_pagination.ext.sqlalchemy import paginate
 from uuid import UUID
 
 class BoardRepository:
+
     def __init__(self, db: AsyncSession):
         self.db = db
     
-    async def create_board(self, board: BoardCreate) -> BoardResponse:
+    async def create_board(self, board: BoardCreate,current_user: UUID) -> BoardResponse:
         new_board = Board(
             name=board.name,
             description=board.description,
             created_by=board.created_by,
+            created_by=current_user,
         )
         self.db.add(new_board)
         await self.db.commit() 

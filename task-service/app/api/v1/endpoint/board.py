@@ -9,7 +9,7 @@ from typing import List
 router = APIRouter()
 
 @router.post("/boards",response=BoardResponse)
-def create_board(board:BoardCreate,board_repo:BoardRepository = Depends(get_board_repository)):
+def create_board(board:BoardCreate,current_user: UUID,board_repo:BoardRepository = Depends(get_board_repository)):
     return board_repo.create_board(board)
 
 
