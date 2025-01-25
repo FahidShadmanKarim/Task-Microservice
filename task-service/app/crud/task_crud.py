@@ -1,57 +1,65 @@
-from fastapi import Depends,HTTPException
-from sqlalchemy.orm import Session
+import httpx
+from fastapi import Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 from app.models.task_model import Task
-from app.schemas.user_schemas import TaskCreate,TaskUpdate,TaskResponse
+from app.schemas.task_schema import TaskCreate, TaskUpdate, TaskResponse
+from app.core.config import get_db
 from datetime import datetime
-from typing import Optional,List
+from typing import Optional, List
 from fastapi_pagination import Page
 from fastapi_pagination.ext.sqlalchemy import paginate
 
+class TaskRepository:
+    def __init__(self, db: AsyncSession):
+        self.db = db
 
-def create_task(db:Session,task:TaskCreate)->TaskResponse:
+    async def create_task(self, task: TaskCreate) -> TaskResponse:
+        new_task = Task(
+            task_name=task.task_name,
+            user_id=task.user_id,
+            board_id=task.board_id,
+            description=task.task_description,
+            status=task.status,
+        )
+        self.db.add(new_task)
+        await self.db.commit()
+        await self.db.refresh(new_task)
+        return TaskResponse.from_orm(new_task)
 
-    task = Task(
-        task_name = task.task_name,
-        desciption = task.task_description,
-        status=task.status,
-        user_id = task.user_id,
-    )
+    async def get_task_by_id(self, task_id: int) -> Optional[TaskResponse]:
+        result = await self.db.execute(select(Task).filter(Task.id == task_id))
+        task = result.scalar_one_or_none()
+        return TaskResponse.from_orm(task) if task else None
 
-    db.add(task)
-    db.commit()
-    db.refresh(task)
+    async def get_tasks(self) -> Page[TaskResponse]:
+        query = select(Task)
+        return await paginate(query, self.db)
 
-    return TaskResponse(
-        id = task.id,
-        task_name = task.task_name,
-        description = task.desciption,
-        status = task.status,
-    )
+    async def update_task(self, task_id: int, task_update: TaskUpdate) -> Optional[TaskResponse]:
+        result = await self.db.execute(select(Task).filter(Task.id == task_id))
+        task = result.scalar_one_or_none()
 
-def get_task_by_id(db:Session, task_id:int)->Optional[TaskResponse]:
+        if not task:
+            return None
 
-    task = db..query(Task).filter(Task.id == task.id).first()
-    return TaskResponse.from_orm(task) if task else None
+        update_data = task_update.dict(exclude_unset=True)
+        for key, value in update_data.items():
+            setattr(task, key, value)
 
-def get_tasks(db:Session) -> Page[TaskResponse]:
+        task.updated_at = datetime.utcnow()
+        await self.db.commit()
+        await self.db.refresh(task)
+        return TaskResponse.from_orm(task)
 
-    query = db.query(Task)
-    task = paginate(query)
-    return task
+    async def delete_task(self, task_id: int) -> bool:
+        result = await self.db.execute(select(Task).filter(Task.id == task_id))
+        task = result.scalar_one_or_none()
+        if not task:
+            return False
+        await self.db.delete(task)
+        await self.db.commit()
+        return True
 
-
-#update task to be implemented
-
-
-
-
-def delete_users(db:Session,task_id:int) -> bool:
-
-    task = db.query(Task).filter(Task.id == task.id).first()
-    if not task:
-        return False
-    db.delete(db_user)
-    db.commit()
-    return True
-
-
+def get_task_repository(db: AsyncSession = Depends(get_db)) -> TaskRepository:
+    return TaskRepository(db)

@@ -5,6 +5,7 @@ from app.crud.user_crud import create_user,get_users,get_user_by_id,update_user,
 from app.schemas.user_schema import UserCreate,UserResponse,UserUpdate
 from fastapi_pagination import Page
 from typing import List
+from uuid import UUID
 
 router = APIRouter()
 
@@ -21,7 +22,7 @@ def get_users_endpoint(skip: int = 0, limit: int = 10, db: Session = Depends(get
 
 
 @router.get("/users/{user_id}", response_model=UserResponse)
-def get_user_by_id_endpoint(user_id: int, db: Session = Depends(get_db)):
+def get_user_by_id_endpoint(user_id: UUID, db: Session = Depends(get_db)):
 
     user = get_user_by_id(db, user_id)
     if not user:
@@ -30,7 +31,7 @@ def get_user_by_id_endpoint(user_id: int, db: Session = Depends(get_db)):
 
 
 @router.put("/users/{user_id}", response_model=UserResponse)
-def update_user_endpoint(user_id: int, user_update: UserUpdate, db: Session = Depends(get_db)):
+def update_user_endpoint(user_id: UUID, user_update: UserUpdate, db: Session = Depends(get_db)):
 
     user = update_user(db, user_id, user_update)
     if not user:
@@ -39,7 +40,7 @@ def update_user_endpoint(user_id: int, user_update: UserUpdate, db: Session = De
 
 
 @router.delete("/users/{user_id}", response_model=None)
-def delete_user_endpoint(user_id: int, db: Session = Depends(get_db)):
+def delete_user_endpoint(user_id: UUID, db: Session = Depends(get_db)):
     result = delete_user(db, user_id)
     if not result:
         raise HTTPException(status_code=404, detail="User not found")

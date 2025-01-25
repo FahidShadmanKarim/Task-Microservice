@@ -8,6 +8,7 @@ from typing import Optional, List
 from fastapi_pagination import Page
 from fastapi_pagination.ext.sqlalchemy import paginate
 import bcrypt
+from uuid import UUID
 
 def create_user(db: Session, user: UserCreate) -> UserResponse:
     
@@ -20,7 +21,7 @@ def create_user(db: Session, user: UserCreate) -> UserResponse:
     db_user = User(
         username=user.username,
         email=user.email,
-        hashed_password=hashed_password,  # Ensure password is hashed before calling this function
+        hashed_password=hashed_password,
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow()
     )
@@ -29,7 +30,7 @@ def create_user(db: Session, user: UserCreate) -> UserResponse:
     db.refresh(db_user)
     return UserResponse.from_orm(db_user)
 
-def get_user_by_id(db: Session, user_id: int) -> Optional[UserResponse]:
+def get_user_by_id(db: Session, user_id: UUID) -> Optional[UserResponse]:
   
     user = db.query(User).filter(User.id == user_id).first()
     return UserResponse.from_orm(user) if user else None
@@ -39,7 +40,7 @@ def get_users(db: Session) -> Page[UserResponse]:
     users = paginate(query)
     return users
 
-def update_user(db: Session, user_id: int, user_update: UserUpdate) -> Optional[UserResponse]:
+def update_user(db: Session, user_id: UUID, user_update: UserUpdate) -> Optional[UserResponse]:
 
     db_user = db.query(User).filter(User.id == user_id).first()
     if not db_user:
@@ -54,7 +55,7 @@ def update_user(db: Session, user_id: int, user_update: UserUpdate) -> Optional[
     db.refresh(db_user)
     return UserResponse.from_orm(db_user)
 
-def delete_user(db: Session, user_id: int) -> bool:
+def delete_user(db: Session, user_id: UUID) -> bool:
   
     db_user = db.query(User).filter(User.id == user_id).first()
     if not db_user:

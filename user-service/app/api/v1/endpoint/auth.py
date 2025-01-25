@@ -5,13 +5,18 @@ from app.core.security import verify_password,create_access_token,verify_token
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from app.models.user_model import User
 from datetime import timedelta
+from pydantic import BaseModel
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl = "/auth/login")
 router = APIRouter()
 
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
 @router.post("/auth/login")
 def login(
-    form_data: OAuth2PasswordRequestForm = Depends(), 
+    form_data: LoginRequest,
     db: Session = Depends(get_db)
 ):  
     print("Received form data:", form_data.username, form_data.password)
