@@ -3,6 +3,7 @@ from fastapi import Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.models.board_model import Board
+from app.models.board_members import BoardMembers
 from app.models.board_schema import BoardCreate, BoardUpdate, BoardResponse
 from app.core.config import get_db
 from datetime import datetime
@@ -10,19 +11,27 @@ from typing import Optional, List
 from fastapi_pagination import Page
 from fastapi_pagination.ext.sqlalchemy import paginate
 from uuid import UUID
+from app.services.user_service import UserService,get_user_service
 
 class BoardRepository:
 
-    def __init__(self, db: AsyncSession):
+    def __init__(self, db: AsyncSession,user_service:UserService):
         self.db = db
+        self.user_service = user_service
     
     async def create_board(self, board: BoardCreate,current_user: UUID) -> BoardResponse:
+        
+        exists = await self.user_validator.validate_user(current_user)
+        if not exists:
+            raise HTTPException(status_code=404, detail="User does not exist")
+
         new_board = Board(
             name=board.name,
             description=board.description,
             created_by=board.created_by,
             created_by=current_user,
         )
+        
         self.db.add(new_board)
         await self.db.commit() 
         await self.db.refresh(new_board) 
@@ -31,11 +40,13 @@ class BoardRepository:
     async def add_user_to_board(self, board_id: UUID, user_id: UUID, role: str = "MEMBER") -> BoardResponse:
         await self.user_service.validate_user(user_id)
 
+        exists = await self.user_service.validate_user(user_id)
+
         existing_member = await self.db.execute(select(BoardMembers).filter(
             BoardMembers.board_id == board_id,
             BoardMembers.user_id == user_id
         ))
-        
+
         existing_member = existing_member.scalar_one_or_none() 
         if existing_member:
             raise HTTPException(status_code=400, detail="User is already a member of the board")
@@ -47,6 +58,7 @@ class BoardRepository:
         return {"message": "User added to board successfully"}
 
     async def update_board(self, board_id: int, board_update: BoardUpdate) -> Optional[BoardResponse]:
+
         result = await self.db.execute(select(Board).filter(Board.id == board_id))
         board = result.scalar_one_or_none() 
         if not board:
@@ -86,5 +98,8 @@ class BoardRepository:
         await self.db.commit() 
         return True
 
-def get_board_repository(db: AsyncSession = Depends(get_db)) -> BoardRepository:
-    return BoardRepository(db)
+def get_board_repository(
+    db: AsyncSession = Depends(get_db), 
+    user_service: UserService = Depends(get_user_service)
+) -> BoardRepository:
+    return BoardRepository(db, user_service)

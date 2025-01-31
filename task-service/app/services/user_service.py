@@ -1,9 +1,17 @@
 import httpx
+import uuid
+import os
+from dotenv import load_dotenv
 from fastapi import HTTPException
 
+
+load_dotenv()
+
 class UserService:
-    def __init__(self, user_service_url: str):
-        self.user_service_url = user_service_url
+    def __init__(self):
+        self.user_service_url = os.getenv("USER_SERVICE_URL")
+        if not self.user_service_url:
+            raise ValueError("USER_SERVICE_URL is not set in the environment variables")
 
     async def validate_user(self, user_id: uuid.UUID) -> bool:
         async with httpx.AsyncClient() as client:
@@ -13,3 +21,6 @@ class UserService:
             raise HTTPException(status_code=404, detail="User not found")
         
         return True
+
+def get_user_service() -> UserService:
+    return UserService()

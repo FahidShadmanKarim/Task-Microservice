@@ -5,6 +5,8 @@ from fastapi_pagination import add_pagination
 from app.models.board_model import Board
 from app.models.task_model import Task
 from app.models.board_members import BoardMembers
+
+
 app = FastAPI()
 
 @app.on_event("startup")
@@ -19,4 +21,8 @@ add_pagination(app)
 
 @app.get('/')
 def read_root():
-    return {"Message": "Hello World!"}
+    return {"Message": "Hello Task!"}
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8001)

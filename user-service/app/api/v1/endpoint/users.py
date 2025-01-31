@@ -9,6 +9,8 @@ from uuid import UUID
 
 router = APIRouter()
 
+
+
 @router.post("/users",response_model=UserResponse)
 def create_user_endpoint(user_create:UserCreate,db:Session = Depends(get_db)):
 
@@ -28,6 +30,11 @@ def get_user_by_id_endpoint(user_id: UUID, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
+    
+
+@router.get("/users/{user_id}/exists")
+async def user_exists(user_id: UUID, db: Session = Depends(get_db)):
+    return get_user_by_id(db, user_id) is not None
 
 
 @router.put("/users/{user_id}", response_model=UserResponse)
