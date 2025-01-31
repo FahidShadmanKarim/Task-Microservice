@@ -31,17 +31,16 @@ class BoardRepository:
             name=board.name,
             description=board.description,
             created_by=board.created_by,
-           
         )
 
         self.db.add(new_board)
         await self.db.commit() 
-        await self.db.refresh(new_board) 
         return BoardResponse.from_orm(new_board)
     
-    async def add_user_to_board(self, board_id: UUID, user_id: UUID, role: str = "MEMBER") -> BoardResponse:
+    
+    async def add_user_to_board(self, board_id: UUID, user_id:UUID, role: str = "MEMBER") -> dict:
 
-
+        print("Hello")
         exists = await self.user_service.validate_user(user_id)
 
         existing_member = await self.db.execute(select(BoardMembers).filter(
@@ -49,16 +48,31 @@ class BoardRepository:
             BoardMembers.user_id == user_id
         ))
 
+
         existing_member = existing_member.scalar_one_or_none() 
 
         if existing_member:
+            print("Member exists")
+
+        if existing_member:
             raise HTTPException(status_code=400, detail="User is already a member of the board")
+        
+        existing_board = await self.db.execute(select(Board).filter(Board.id == board_id))
+        existing_board = existing_board.scalar_one_or_none()
+
+        if not existing_board:
+         raise HTTPException(status_code=404, detail="Board does not exist!")
 
         board_member = BoardMembers(board_id=board_id, user_id=user_id, role=role)
         self.db.add(board_member)
         await self.db.commit()
 
+        async with self.db.begin():  
+            self.db.add(board_member)
+            await self.db.commit()
+
         return {"message": "User added to board successfully"}
+
 
     async def update_board(self, board_id: int, board_update: BoardUpdate) -> Optional[BoardResponse]:
 
@@ -73,7 +87,6 @@ class BoardRepository:
 
         board.updated_at = datetime.utcnow()
         await self.db.commit()
-        await self.db.refresh(board)
         return BoardResponse.from_orm(board)
 
     async def get_board_by_id(self, board_id: int) -> Optional[BoardResponse]:

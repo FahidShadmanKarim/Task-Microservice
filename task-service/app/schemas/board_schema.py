@@ -37,5 +37,7 @@ class BoardResponse(BaseModel):
        from_attributes = True
     
 
-
+class BoardAddUser(BaseModel):
+    user_id: UUID
+    role: str = "MEMBER"
 

@@ -52,7 +52,6 @@ def update_user(db: Session, user_id: UUID, user_update: UserUpdate) -> Optional
 
     db_user.updated_at = datetime.utcnow()
     db.commit()
-    db.refresh(db_user)
     return UserResponse.from_orm(db_user)
 
 def delete_user(db: Session, user_id: UUID) -> bool:
