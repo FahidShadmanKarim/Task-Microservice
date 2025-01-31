@@ -8,11 +8,10 @@ from datetime import datetime
 
 
 class BoardCreate(BaseModel):
-    name: str = Field(...,min_length=3,max_length=50)
+
+    name: str
     description: Optional[str] = None
     created_by: UUID
-    created_at: datetime = datetime.utcnow()
-    updated_at: datetime = datetime.utcnow()
 
     class Config:
       from_attributes = True
@@ -33,6 +32,9 @@ class BoardResponse(BaseModel):
     description: Optional[str] = None
     created_at: datetime
     updated_at: datetime
+
+    class Config:
+       from_attributes = True
     
 
 

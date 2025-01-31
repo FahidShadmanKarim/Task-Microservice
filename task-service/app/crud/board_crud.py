@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.models.board_model import Board
 from app.models.board_members import BoardMembers
-from app.models.board_schema import BoardCreate, BoardUpdate, BoardResponse
+from app.schemas.board_schema import BoardCreate, BoardUpdate, BoardResponse
 from app.core.config import get_db
 from datetime import datetime
 from typing import Optional, List
@@ -19,19 +19,22 @@ class BoardRepository:
         self.db = db
         self.user_service = user_service
     
-    async def create_board(self, board: BoardCreate,current_user: UUID) -> BoardResponse:
+    async def create_board(self, board: BoardCreate) -> BoardResponse:
         
-        exists = await self.user_validator.validate_user(current_user)
+        exists = await self.user_service.validate_user(board.created_by)
+      
+      
         if not exists:
             raise HTTPException(status_code=404, detail="User does not exist")
 
+       
         new_board = Board(
             name=board.name,
             description=board.description,
             created_by=board.created_by,
-            created_by=current_user,
+           
         )
-        
+
         self.db.add(new_board)
         await self.db.commit() 
         await self.db.refresh(new_board) 

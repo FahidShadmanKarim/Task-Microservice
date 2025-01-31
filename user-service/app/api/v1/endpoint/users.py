@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from app.core.config import get_db  # Dependency for DB session
+from app.core.config import get_db  
 from app.crud.user_crud import create_user,get_users,get_user_by_id,update_user,delete_user
 from app.schemas.user_schema import UserCreate,UserResponse,UserUpdate
 from fastapi_pagination import Page
@@ -26,15 +26,21 @@ def get_users_endpoint(skip: int = 0, limit: int = 10, db: Session = Depends(get
 @router.get("/users/{user_id}", response_model=UserResponse)
 def get_user_by_id_endpoint(user_id: UUID, db: Session = Depends(get_db)):
 
-    user = get_user_by_id(db, user_id)
+    user_id = get_user_by_id(db, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
     
 
 @router.get("/users/{user_id}/exists")
-async def user_exists(user_id: UUID, db: Session = Depends(get_db)):
-    return get_user_by_id(db, user_id) is not None
+def user_exists(user_id: UUID, db: Session = Depends(get_db)):
+    user = get_user_by_id(db, user_id)
+    print(user_id)
+
+    if user is not None:
+        return {"exists": True, "message": "User exists"}
+    else:
+        raise HTTPException(status_code=404, detail="User not found")
 
 
 @router.put("/users/{user_id}", response_model=UserResponse)

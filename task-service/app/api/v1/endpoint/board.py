@@ -4,13 +4,14 @@ from app.crud.board_crud import BoardRepository, get_board_repository
 from app.schemas.board_schema import BoardCreate, BoardResponse, BoardUpdate
 from fastapi_pagination import Page
 from typing import List
-
+from uuid import UUID
 
 router = APIRouter()
 
-@router.post("/boards",response=BoardResponse)
-def create_board(board:BoardCreate,current_user: UUID,board_repo:BoardRepository = Depends(get_board_repository)):
-    return board_repo.create_board(board)
+@router.post("/boards",response_model=BoardResponse)
+async def create_board(board:BoardCreate,board_repo:BoardRepository = Depends(get_board_repository)):
+    print(board)
+    return await board_repo.create_board(board)
 
 
 
