@@ -27,16 +27,17 @@ def get_users_endpoint(skip: int = 0, limit: int = 10, db: Session = Depends(get
 def get_user_by_id_endpoint(user_id: UUID, db: Session = Depends(get_db)):
 
     user_id = get_user_by_id(db, user_id)
+
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+
     return user
     
 
 @router.get("/users/{user_id}/exists")
 def user_exists(user_id: UUID, db: Session = Depends(get_db)):
     user = get_user_by_id(db, user_id)
-    print(user_id)
-
+   
     if user is not None:
         return {"exists": True, "message": "User exists"}
     else:

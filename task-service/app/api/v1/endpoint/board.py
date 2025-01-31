@@ -10,9 +10,7 @@ router = APIRouter()
 
 @router.post("/boards",response_model=BoardResponse)
 async def create_board(board:BoardCreate,board_repo:BoardRepository = Depends(get_board_repository)):
-    print(board)
     return await board_repo.create_board(board)
-
 
 
 @router.get("/boards", response_model=Page[BoardResponse])

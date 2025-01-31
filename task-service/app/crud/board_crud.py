@@ -23,7 +23,6 @@ class BoardRepository:
         
         exists = await self.user_service.validate_user(board.created_by)
       
-      
         if not exists:
             raise HTTPException(status_code=404, detail="User does not exist")
 
@@ -41,7 +40,7 @@ class BoardRepository:
         return BoardResponse.from_orm(new_board)
     
     async def add_user_to_board(self, board_id: UUID, user_id: UUID, role: str = "MEMBER") -> BoardResponse:
-        await self.user_service.validate_user(user_id)
+
 
         exists = await self.user_service.validate_user(user_id)
 
@@ -51,6 +50,7 @@ class BoardRepository:
         ))
 
         existing_member = existing_member.scalar_one_or_none() 
+
         if existing_member:
             raise HTTPException(status_code=400, detail="User is already a member of the board")
 

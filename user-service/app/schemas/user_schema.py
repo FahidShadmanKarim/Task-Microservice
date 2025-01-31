@@ -31,7 +31,7 @@ class UserResponse(BaseModel):
     email: str
    
     class Config:
-       from_attributes = True #tells pydantic to read data even if its returned from orm
+       from_attributes = True
 
 
 class LoginRequest(BaseModel):
